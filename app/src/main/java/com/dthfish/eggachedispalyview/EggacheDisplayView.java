@@ -152,6 +152,7 @@ public class EggacheDisplayView extends ViewGroup {
         if (views == null || views.isEmpty()) {
             return;
         }
+        stop();
         mMenuViews.clear();
         mMenuViews.addAll(views);
         removeAllViews();
@@ -159,6 +160,34 @@ public class EggacheDisplayView extends ViewGroup {
         addView(mBtnExpand);
         for (View view : views) {
             addView(view);
+        }
+    }
+
+    /**
+     * @param views          menu view
+     * @param keepChildCount 保留在 xml 里面的添加的子view 数量，因为要除去mBtnCollapse/mBtnExpand，
+     *                       所以第三个开始计算
+     */
+    public void setMenuViews(List<View> views, int keepChildCount) {
+        if (views == null || views.isEmpty()) {
+            return;
+        }
+        stop();
+        if (getChildCount() - 2 >= keepChildCount) {
+            List<View> tempViews = new ArrayList<>();
+            for (int i = 0; i < keepChildCount; i++) {
+                tempViews.add(mMenuViews.get(i));
+            }
+            mMenuViews.clear();
+            mMenuViews.addAll(tempViews);
+            mMenuViews.addAll(views);
+            int start = 2 + keepChildCount;
+            removeViews(start, getChildCount() - start);
+            for (View view : views) {
+                addView(view);
+            }
+        } else {
+            setMenuViews(views);
         }
     }
 
@@ -171,6 +200,7 @@ public class EggacheDisplayView extends ViewGroup {
         if (views == null || views.isEmpty()) {
             return;
         }
+        stop();
         mMenuViews.addAll(views);
         for (View view : views) {
             addView(view);

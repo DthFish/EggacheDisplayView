@@ -6,11 +6,49 @@
     android:layout_height="match_parent"
     tools:context="com.dthfish.eggachedispalyview.MainActivity">
 
+    <TextView
+        android:layout_width="80dp"
+        android:layout_height="wrap_content"
+        android:text="只有点击小箭头才展开，Loop 模式子控件响应点击" />
+
     <com.dthfish.eggachedispalyview.EggacheDisplayView
         android:id="@+id/edv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingTop="10dp">
+
+        <View
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:background="#0f0" />
+
+        <View
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:background="#00f" />
+
+        <View
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:background="#f00" />
+
+        <View
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:background="#000" />
+    </com.dthfish.eggachedispalyview.EggacheDisplayView>
+
+    <TextView
+        android:layout_width="80dp"
+        android:layout_height="wrap_content"
+        android:text="点击整个控件展开，Loop 模式下子控件不响应点击" />
+
+    <com.dthfish.eggachedispalyview.EggacheDisplayView
+        android:id="@+id/edv2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingTop="10dp"
+        app:click_loop_to_expand="true">
 
         <View
             android:layout_width="35dp"

@@ -185,12 +185,12 @@ public class EggacheDisplayView extends ViewGroup {
         for (int i = 0; i < getChildCount(); i++) {
             View child = getChildAt(i);
             if (child == mBtnCollapse || child == mBtnExpand) continue;
-            child.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Log.d(TAG, "item onClick: ");
-                }
-            });
+//            child.setOnClickListener(new OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//                    Log.d(TAG, "item onClick: ");
+//                }
+//            });
             mMenuViews.add(child);
         }
 

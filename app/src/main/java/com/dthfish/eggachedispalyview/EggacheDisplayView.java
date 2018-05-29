@@ -11,6 +11,7 @@ import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -34,6 +35,10 @@ public class EggacheDisplayView extends ViewGroup {
     private AnimatorListenerAdapter mCollapseListener;
     private int mMaxButtonWidth;
     private AnimatorSet mLoopAnimationSet;
+    /**
+     * 若为 true 在 loop 模式下点击 view 直接展开，List 模式下响应子 view 点击
+     */
+    private boolean mClickLoopToExpand;
 
     public enum DisplayMode {
         LIST,
@@ -100,6 +105,7 @@ public class EggacheDisplayView extends ViewGroup {
         mBtnSpacing = typedArray.getDimensionPixelSize(R.styleable.EggacheDisplayView_btn_spacing, dpToPx(context, 10));
         int layoutCollapse = typedArray.getResourceId(R.styleable.EggacheDisplayView_collapse_layout, R.layout.layout_collapse_button);
         int layoutExpand = typedArray.getResourceId(R.styleable.EggacheDisplayView_expand_layout, R.layout.layout_expand_button);
+        mClickLoopToExpand = typedArray.getBoolean(R.styleable.EggacheDisplayView_click_loop_to_expand, false);
 
         typedArray.recycle();
 
@@ -124,7 +130,15 @@ public class EggacheDisplayView extends ViewGroup {
         mBtnExpand.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                extend();
+                expand();
+            }
+        });
+        setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mClickLoopToExpand && mDisplayMode == DisplayMode.LOOP) {
+                    expand();
+                }
             }
         });
 
@@ -147,6 +161,21 @@ public class EggacheDisplayView extends ViewGroup {
         }
     }
 
+    /**
+     * 在已经存在 menu item 的时候调用，不会清除已有的 item
+     *
+     * @param views 注意不要重复添加
+     */
+    public void addMenuViews(List<View> views) {
+        if (views == null || views.isEmpty()) {
+            return;
+        }
+        mMenuViews.addAll(views);
+        for (View view : views) {
+            addView(view);
+        }
+    }
+
 
     @Override
     protected void onFinishInflate() {
@@ -156,6 +185,12 @@ public class EggacheDisplayView extends ViewGroup {
         for (int i = 0; i < getChildCount(); i++) {
             View child = getChildAt(i);
             if (child == mBtnCollapse || child == mBtnExpand) continue;
+            child.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.d(TAG, "item onClick: ");
+                }
+            });
             mMenuViews.add(child);
         }
 
@@ -380,7 +415,7 @@ public class EggacheDisplayView extends ViewGroup {
         start();
     }
 
-    public void extend() {
+    public void expand() {
         if (!mIsExtend) {
             mIsExtend = true;
             stop();
@@ -450,6 +485,11 @@ public class EggacheDisplayView extends ViewGroup {
         mLoopAnimationSet.setDuration(mLoopDuration);
         mLoopAnimationSet.playTogether(animator1, animator2);
         mLoopAnimationSet.start();
+    }
+
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
+        return (mClickLoopToExpand && mDisplayMode == DisplayMode.LOOP) || super.onInterceptTouchEvent(ev);
     }
 
     private AnimRunnable mRunnable = new AnimRunnable();

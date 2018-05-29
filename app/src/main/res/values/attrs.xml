@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="EggacheDisplayView">
+        <!--收起按钮布局-->
+        <attr name="collapse_layout" format="reference" />
+        <!--展开按钮布局-->
+        <attr name="expand_layout" format="reference" />
+        <!--子布局之间的距离-->
+        <attr name="btn_spacing" format="dimension" />
+    </declare-styleable>
+</resources>

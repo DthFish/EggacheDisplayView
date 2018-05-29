@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
@@ -76,10 +77,10 @@ public class EggacheDisplayView extends ViewGroup {
 
 
     private int mBtnSpacing;
-    private View mBtnExpend;
+    private View mBtnExpand;
     private boolean mIsExtend = true;
     /**
-     * 除去{@link #mBtnCollapse,#mBtnExpend} 的所有子 View
+     * 除去{@link #mBtnCollapse,#mBtnExpand} 的所有子 View
      */
     private List<View> mMenuViews = new ArrayList<>();
     public static final String TAG = "EggacheDisplayView";
@@ -95,19 +96,24 @@ public class EggacheDisplayView extends ViewGroup {
 
     public EggacheDisplayView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.EggacheDisplayView, 0, 0);
+        mBtnSpacing = typedArray.getDimensionPixelSize(R.styleable.EggacheDisplayView_btn_spacing, dpToPx(context, 10));
+        int layoutCollapse = typedArray.getResourceId(R.styleable.EggacheDisplayView_collapse_layout, R.layout.layout_collapse_button);
+        int layoutExpand = typedArray.getResourceId(R.styleable.EggacheDisplayView_expand_layout, R.layout.layout_expand_button);
 
-        mBtnSpacing = dpToPx(context, 10);
-        createCollapseAndExpandButton(context);
+        typedArray.recycle();
+
+        createCollapseAndExpandButton(context, layoutCollapse, layoutExpand);
     }
 
-    private void createCollapseAndExpandButton(Context context) {
+    private void createCollapseAndExpandButton(Context context, int layoutCollapse, int layoutExpand) {
         LayoutInflater layoutInflater = LayoutInflater.from(context);
-        mBtnCollapse = layoutInflater.inflate(R.layout.layout_collapse_button, this, false);
-        mBtnExpend = layoutInflater.inflate(R.layout.layout_expend_button, this, false);
-        mBtnExpend.setVisibility(GONE);
+        mBtnCollapse = layoutInflater.inflate(layoutCollapse, this, false);
+        mBtnExpand = layoutInflater.inflate(layoutExpand, this, false);
+        mBtnExpand.setVisibility(GONE);
 
         addView(mBtnCollapse);
-        addView(mBtnExpend);
+        addView(mBtnExpand);
 
         mBtnCollapse.setOnClickListener(new OnClickListener() {
             @Override
@@ -115,7 +121,7 @@ public class EggacheDisplayView extends ViewGroup {
                 collapse();
             }
         });
-        mBtnExpend.setOnClickListener(new OnClickListener() {
+        mBtnExpand.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 extend();
@@ -135,7 +141,7 @@ public class EggacheDisplayView extends ViewGroup {
         mMenuViews.addAll(views);
         removeAllViews();
         addView(mBtnCollapse);
-        addView(mBtnExpend);
+        addView(mBtnExpand);
         for (View view : views) {
             addView(view);
         }
@@ -149,7 +155,7 @@ public class EggacheDisplayView extends ViewGroup {
         mMenuViews.clear();
         for (int i = 0; i < getChildCount(); i++) {
             View child = getChildAt(i);
-            if (child == mBtnCollapse || child == mBtnExpend) continue;
+            if (child == mBtnCollapse || child == mBtnExpand) continue;
             mMenuViews.add(child);
         }
 
@@ -186,8 +192,8 @@ public class EggacheDisplayView extends ViewGroup {
             }
 
         } else if (mDisplayMode == DisplayMode.LOOP) {
-            // DisplayMode.LOOP 高度只包括 最高的子 view 的高度 + mBtnExpend 的高度
-            height += maxButtonHeight + mBtnSpacing + mBtnExpend.getMeasuredHeight();
+            // DisplayMode.LOOP 高度只包括 最高的子 view 的高度 + mBtnExpand 的高度
+            height += maxButtonHeight + mBtnSpacing + mBtnExpand.getMeasuredHeight();
 
         }
         width = mMaxButtonWidth + getPaddingLeft() + getPaddingRight();
@@ -212,7 +218,7 @@ public class EggacheDisplayView extends ViewGroup {
             int nextY = top + getPaddingTop();
             for (int i = 0; i < getChildCount(); i++) {
                 View child = getChildAt(i);
-                if (child.getVisibility() == GONE || child == mBtnExpend) {
+                if (child.getVisibility() == GONE || child == mBtnExpand) {
                     continue;
                 }
                 // DisplayMode.LOOP 模式时，onLayout 会把 menuView 进行横坐标的偏移，这里把坐标回置
@@ -224,7 +230,7 @@ public class EggacheDisplayView extends ViewGroup {
                 child.layout(l, t, r, b);
                 nextY += child.getMeasuredHeight() + mBtnSpacing;
             }
-            mBtnExpend.layout(0, 0, 0, 0);
+            mBtnExpand.layout(0, 0, 0, 0);
         } else if (mDisplayMode == DisplayMode.LOOP) {
             int centerHorizontalX = (right - left) / 2;
             int nextY = top + getPaddingTop();
@@ -236,7 +242,7 @@ public class EggacheDisplayView extends ViewGroup {
                 if (child.getVisibility() == GONE) {
                     continue;
                 }
-                if (child == mBtnExpend || child == mBtnCollapse) {
+                if (child == mBtnExpand || child == mBtnCollapse) {
                     int l = centerHorizontalX - child.getMeasuredWidth() / 2;
                     int t = nextY;
                     int r = l + child.getMeasuredWidth();
@@ -299,8 +305,8 @@ public class EggacheDisplayView extends ViewGroup {
             if (child == mBtnCollapse && mBtnCollapse.getVisibility() != GONE) {
                 beginY -= mBtnCollapse.getMeasuredHeight();
                 beginY -= mBtnSpacing;
-            } else if (child == mBtnExpend) {
-                ObjectAnimator animator = ObjectAnimator.ofFloat(child, "translationY", -mBtnExpend.getMeasuredHeight(), 0);
+            } else if (child == mBtnExpand) {
+                ObjectAnimator animator = ObjectAnimator.ofFloat(child, "translationY", -mBtnExpand.getMeasuredHeight(), 0);
                 animator.setStartDelay(400);
                 animator.setDuration(800);
                 ObjectAnimator alphaAnimator = ObjectAnimator.ofFloat(child, "alpha", 0, 1);
@@ -341,7 +347,7 @@ public class EggacheDisplayView extends ViewGroup {
                     super.onAnimationStart(animation);
                     // 展开,这里会引发重绘
                     mDisplayMode = DisplayMode.LIST;
-                    mBtnExpend.setVisibility(GONE);
+                    mBtnExpand.setVisibility(GONE);
                     mBtnCollapse.setVisibility(VISIBLE);
                 }
             };
@@ -354,9 +360,9 @@ public class EggacheDisplayView extends ViewGroup {
                 public void onAnimationEnd(Animator animation) {
                     super.onAnimationEnd(animation);
                     // 收起,这里会引发重绘
-                    mBtnExpend.setAlpha(0);
+                    mBtnExpand.setAlpha(0);
                     mDisplayMode = DisplayMode.LOOP;
-                    mBtnExpend.setVisibility(VISIBLE);
+                    mBtnExpand.setVisibility(VISIBLE);
                     mBtnCollapse.setVisibility(INVISIBLE);
                     mExpandBtnAnimatorSet.start();
                 }

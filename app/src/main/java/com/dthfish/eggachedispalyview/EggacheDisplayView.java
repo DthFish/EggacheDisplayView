@@ -39,6 +39,7 @@ public class EggacheDisplayView extends ViewGroup {
      * 若为 true 在 loop 模式下点击 view 直接展开，List 模式下响应子 view 点击
      */
     private boolean mClickLoopToExpand;
+    private int mMaxButtonHeight;
 
     public enum DisplayMode {
         LIST,
@@ -201,7 +202,7 @@ public class EggacheDisplayView extends ViewGroup {
         int width = 0;
         int height = 0;
         mMaxButtonWidth = 0;
-        int maxButtonHeight = 0;
+        mMaxButtonHeight = 0;
 
         for (int i = 0; i < getChildCount(); i++) {
             View child = getChildAt(i);
@@ -209,7 +210,7 @@ public class EggacheDisplayView extends ViewGroup {
 
             measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, 0);
             mMaxButtonWidth = Math.max(mMaxButtonWidth, child.getMeasuredWidth());
-            maxButtonHeight = Math.max(maxButtonHeight, child.getMeasuredHeight());
+            mMaxButtonHeight = Math.max(mMaxButtonHeight, child.getMeasuredHeight());
         }
         if (mDisplayMode == DisplayMode.LIST) {
             // DisplayMode.LIST 相当于 LinearLayout
@@ -228,7 +229,7 @@ public class EggacheDisplayView extends ViewGroup {
 
         } else if (mDisplayMode == DisplayMode.LOOP) {
             // DisplayMode.LOOP 高度只包括 最高的子 view 的高度 + mBtnExpand 的高度
-            height += maxButtonHeight + mBtnSpacing + mBtnExpand.getMeasuredHeight();
+            height += mMaxButtonHeight + mBtnSpacing + mBtnExpand.getMeasuredHeight();
 
         }
         width = mMaxButtonWidth + getPaddingLeft() + getPaddingRight();
@@ -283,7 +284,7 @@ public class EggacheDisplayView extends ViewGroup {
                     int r = l + child.getMeasuredWidth();
                     int b = t + child.getMeasuredHeight();
                     child.layout(l, t, r, b);
-                    nextY += child.getMeasuredHeight() + mBtnSpacing;
+                    nextY += mMaxButtonHeight + mBtnSpacing;
                 } else {
                     // DisplayMode.LIST 模式时，动画 会把 menuView 进行纵坐标的偏移，透明度设置，这里把坐标，透明度回置
                     child.setAlpha(1);

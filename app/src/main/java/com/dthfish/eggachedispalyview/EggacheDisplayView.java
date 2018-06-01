@@ -250,7 +250,7 @@ public class EggacheDisplayView extends ViewGroup {
                 if (child.getVisibility() == GONE) continue;
 
                 height += child.getMeasuredHeight();
-                // 最后一个
+                // 最后一个不加
                 if (i != getChildCount() - 1) {
                     height += mBtnSpacing;
                 }
@@ -468,7 +468,7 @@ public class EggacheDisplayView extends ViewGroup {
     }
 
     public void start() {
-        if (!isStarted && mMenuViews.size() > 1) {
+        if (!isStarted && mMenuViews.size() > 1 && mDisplayMode == DisplayMode.LOOP) {
             isStarted = true;
             mCurrentView = mMenuViews.get(0);
             mNextView = mMenuViews.get(1);
@@ -509,7 +509,6 @@ public class EggacheDisplayView extends ViewGroup {
                 mCurrentView = mNextView;
                 int index = mMenuViews.indexOf(mCurrentView);
                 mNextView = index == mMenuViews.size() - 1 ? mMenuViews.get(0) : mMenuViews.get(index + 1);
-                postDelayed(mRunnable, mLoopGap);
             }
 
         });
@@ -530,6 +529,7 @@ public class EggacheDisplayView extends ViewGroup {
         @Override
         public void run() {
             performSwitch();
+            postDelayed(mRunnable, mLoopGap + mLoopDuration);
         }
     }
 

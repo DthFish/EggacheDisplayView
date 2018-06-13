@@ -281,7 +281,7 @@ public class EggacheDisplayView extends ViewGroup {
         // 上往下展开
         if (mDisplayMode == DisplayMode.LIST) {
             int centerHorizontalX = (right - left) / 2;
-            int nextY = top + getPaddingTop();
+            int nextY = getPaddingTop();
             for (int i = 0; i < getChildCount(); i++) {
                 View child = getChildAt(i);
                 if (child.getVisibility() == GONE || child == mBtnExpand) {
@@ -299,7 +299,7 @@ public class EggacheDisplayView extends ViewGroup {
             mBtnExpand.layout(0, 0, 0, 0);
         } else if (mDisplayMode == DisplayMode.LOOP) {
             int centerHorizontalX = (right - left) / 2;
-            int nextY = top + getPaddingTop();
+            int nextY = getPaddingTop();
 
             boolean hasLayoutFirstVisibleMenu = false;
             for (int i = 0; i < getChildCount(); i++) {
@@ -323,14 +323,14 @@ public class EggacheDisplayView extends ViewGroup {
                     if (hasLayoutFirstVisibleMenu) {
 //                        int l = centerHorizontalX + child.getMeasuredWidth() / 2 + mMaxButtonWidth;
                         int l = centerHorizontalX - child.getMeasuredWidth() / 2;
-                        int t = top + getPaddingTop();
+                        int t = getPaddingTop();
                         int r = l + child.getMeasuredWidth();
                         int b = t + child.getMeasuredHeight();
                         child.layout(l, t, r, b);
                         child.setTranslationX(mMaxButtonWidth);
                     } else {
                         int l = centerHorizontalX - child.getMeasuredWidth() / 2;
-                        int t = top + getPaddingTop();
+                        int t = getPaddingTop();
                         int r = l + child.getMeasuredWidth();
                         int b = t + child.getMeasuredHeight();
                         child.layout(l, t, r, b);

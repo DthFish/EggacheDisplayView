@@ -71,4 +71,44 @@
             android:background="#000" />
     </com.dthfish.eggachedispalyview.EggacheDisplayView>
 
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <View
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:background="#0f0" />
+
+        <com.dthfish.eggachedispalyview.EggacheDisplayView
+            android:id="@+id/edv3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="10dp"
+            app:click_loop_to_expand="true">
+
+            <View
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:background="#0f0" />
+
+            <View
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:background="#00f" />
+
+            <View
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:background="#f00" />
+
+            <View
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:background="#000" />
+        </com.dthfish.eggachedispalyview.EggacheDisplayView>
+
+    </LinearLayout>
+
 </LinearLayout>

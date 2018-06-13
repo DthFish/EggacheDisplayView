@@ -494,6 +494,54 @@ public enum DisplayMode {
 另外如果大家有发现问题或者意见还望提醒我改正，谢谢！
 
 如果有喜欢这篇文章的同学，请务必给我一个赞呀！这是对广大写博客的同学的最大的肯定！
+### 更新
+
+##### 2018年 6月 13日
+
+最近在使用控件的过程中出现了如果用 LinearLayout 包裹 EggacheDispalyView，并在 EggacheDispalyView 前面添加一个 View，就会出现 EggacheDisplayView 里面的 itemView 布局错误的现象。原因是最初我 layout 的时候多加了 top 值，去掉就好了，可以看下面的标记错误的地方。
+
+~~~ java
+    @Override
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        // 上往下展开
+        if (mDisplayMode == DisplayMode.LIST) {
+            int centerHorizontalX = (right - left) / 2;
+            int nextY = top + getPaddingTop();// 【这里错误】
+            // 省略代码...
+        } else if (mDisplayMode == DisplayMode.LOOP) {
+            int centerHorizontalX = (right - left) / 2;
+            int nextY = top + getPaddingTop();// 【这里错误】
+			// 省略代码...
+            boolean hasLayoutFirstVisibleMenu = false;
+            for (int i = 0; i < getChildCount(); i++) {
+                // 省略代码...
+                if (child == mBtnCollapse || child == mBtnExpand) {
+                 	// 省略代码...   
+                } else {               
+                    child.setAlpha(1);
+                    child.setTranslationY(0);
+                    if (hasLayoutFirstVisibleMenu) {
+                        int l = centerHorizontalX - child.getMeasuredWidth() / 2;
+                        int t = top + getPaddingTop();// 【这里错误】
+                        int r = l + child.getMeasuredWidth();
+                        int b = t + child.getMeasuredHeight();
+                        child.layout(l, t, r, b);
+                        child.setTranslationX(mMaxButtonWidth);
+                    } else {
+                        int l = centerHorizontalX - child.getMeasuredWidth() / 2;
+                        int t = top + getPaddingTop();// 【这里错误】
+                        int r = l + child.getMeasuredWidth();
+                        int b = t + child.getMeasuredHeight();
+                        child.layout(l, t, r, b);
+                        hasLayoutFirstVisibleMenu = true;
+
+                    }
+                }
+            }
+        }
+    }
+
+~~~
 
 **[EggacheDisplayView 源码](https://github.com/DthFish/EggacheDisplayView)**
 

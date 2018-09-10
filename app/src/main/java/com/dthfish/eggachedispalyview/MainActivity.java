@@ -12,6 +12,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         final EggacheDisplayView edv = findViewById(R.id.edv);
+        edv.setListStrategy(new TopListStrategy());
         edv.postDelayed(new Runnable() {
             @Override
             public void run() {

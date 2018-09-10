@@ -15,7 +15,9 @@
         android:id="@+id/edv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingTop="10dp">
+        android:layout_gravity="bottom"
+        app:collapse_layout="@layout/layout_collapse_button_2"
+        app:expand_layout="@layout/layout_expand_button_2">
 
         <View
             android:layout_width="35dp"

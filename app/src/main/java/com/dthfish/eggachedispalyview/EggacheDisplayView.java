@@ -47,20 +47,21 @@ public class EggacheDisplayView extends ViewGroup {
     }
 
     public enum ListDirection {
-        LEFT,
+        LEFT,//未支持
         TOP,
-        RIGHT,
+        RIGHT,//未支持
         BOTTOM
     }
 
     public enum LoopDirection {
         RIGHT_TO_LEFT,
-        BOTTOM_TO_TOP
+        BOTTOM_TO_TOP//未支持
     }
 
     private DisplayMode mDisplayMode = DisplayMode.LIST;
     private ListDirection mListDirection = ListDirection.BOTTOM;
     private LoopDirection mLoopDirection = LoopDirection.RIGHT_TO_LEFT;
+    private ListStrategy mListStrategy;
     private static final int ANIMATION_DURATION = 400;
     private AnimatorSet mExpandAnimatorSet = new AnimatorSet().setDuration(ANIMATION_DURATION);
     private AnimatorSet mCollapseAnimatorSet = new AnimatorSet().setDuration(ANIMATION_DURATION);
@@ -107,7 +108,12 @@ public class EggacheDisplayView extends ViewGroup {
         int layoutCollapse = typedArray.getResourceId(R.styleable.EggacheDisplayView_collapse_layout, R.layout.layout_collapse_button);
         int layoutExpand = typedArray.getResourceId(R.styleable.EggacheDisplayView_expand_layout, R.layout.layout_expand_button);
         mClickLoopToExpand = typedArray.getBoolean(R.styleable.EggacheDisplayView_click_loop_to_expand, false);
-
+        int listDirection = typedArray.getInt(R.styleable.EggacheDisplayView_list_direction, 0);
+        if (listDirection == 0) {
+            mListDirection = ListDirection.BOTTOM;
+        } else {
+            mListDirection = ListDirection.TOP;
+        }
         typedArray.recycle();
 
         createCollapseAndExpandButton(context, layoutCollapse, layoutExpand);
@@ -142,7 +148,41 @@ public class EggacheDisplayView extends ViewGroup {
                 }
             }
         });
+        generateListStrategy();
+    }
 
+    /**
+     * 设置展开方向，目前只支持 top，bottom
+     *
+     * @param listDirection {@link ListDirection}
+     */
+    public void setListDirection(ListDirection listDirection) {
+        mListDirection = listDirection;
+        generateListStrategy();
+        requestLayout();
+    }
+
+    /**
+     * 设置展开策略{@link BottomListStrategy}{@link TopListStrategy} 或者自己实现{@link ListStrategy},
+     * 如果{@link #setListDirection(ListDirection listDirection)}不能满足你的需求，可以尝试自己实现
+     *
+     * @param listStrategy 布局策略
+     */
+    public void setListStrategy(ListStrategy listStrategy) {
+        if (listStrategy != null) {
+            mListStrategy = listStrategy;
+            mListStrategy.attach(this, mBtnExpand, mBtnCollapse, mBtnSpacing);
+            requestLayout();
+        }
+    }
+
+    private void generateListStrategy() {
+        if (mListDirection == ListDirection.TOP) {
+            mListStrategy = new TopListStrategy();
+        } else {
+            mListStrategy = new BottomListStrategy();
+        }
+        mListStrategy.attach(this, mBtnExpand, mBtnCollapse, mBtnSpacing);
     }
 
     /**
@@ -244,25 +284,16 @@ public class EggacheDisplayView extends ViewGroup {
         }
         if (mDisplayMode == DisplayMode.LIST) {
             // DisplayMode.LIST 相当于 LinearLayout
-
-            for (int i = 0; i < getChildCount(); i++) {
-                View child = getChildAt(i);
-                if (child.getVisibility() == GONE) continue;
-
-                height += child.getMeasuredHeight();
-                // 最后一个不加
-                if (i != getChildCount() - 1) {
-                    height += mBtnSpacing;
-                }
-
-            }
+            height = mListStrategy.getListHeightWithoutPadding(mMaxButtonHeight, mMaxButtonWidth);
+            width = mListStrategy.getListWidthWithoutPadding(mMaxButtonHeight, mMaxButtonWidth);
 
         } else if (mDisplayMode == DisplayMode.LOOP) {
             // DisplayMode.LOOP 高度只包括 最高的子 view 的高度 + mBtnExpand 的高度
-            height += mMaxButtonHeight + mBtnSpacing + mBtnExpand.getMeasuredHeight();
+            height = mListStrategy.getLoopHeightWithoutPadding(mMaxButtonHeight, mMaxButtonWidth);
+            width = mListStrategy.getLoopWidthWithoutPadding(mMaxButtonHeight, mMaxButtonWidth);
 
         }
-        width = mMaxButtonWidth + getPaddingLeft() + getPaddingRight();
+        width += getPaddingLeft() + getPaddingRight();
         height += getPaddingTop() + getPaddingBottom();
 
 
@@ -280,65 +311,9 @@ public class EggacheDisplayView extends ViewGroup {
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         // 上往下展开
         if (mDisplayMode == DisplayMode.LIST) {
-            int centerHorizontalX = (right - left) / 2;
-            int nextY = getPaddingTop();
-            for (int i = 0; i < getChildCount(); i++) {
-                View child = getChildAt(i);
-                if (child.getVisibility() == GONE || child == mBtnExpand) {
-                    continue;
-                }
-                // DisplayMode.LOOP 模式时，onLayout 会把 menuView 进行横坐标的偏移，这里把坐标回置
-                child.setTranslationX(0);
-                int l = centerHorizontalX - child.getMeasuredWidth() / 2;
-                int t = nextY;
-                int r = l + child.getMeasuredWidth();
-                int b = t + child.getMeasuredHeight();
-                child.layout(l, t, r, b);
-                nextY += child.getMeasuredHeight() + mBtnSpacing;
-            }
-            mBtnExpand.layout(0, 0, 0, 0);
+            mListStrategy.onListLayout(changed, left, top, right, bottom);
         } else if (mDisplayMode == DisplayMode.LOOP) {
-            int centerHorizontalX = (right - left) / 2;
-            int nextY = getPaddingTop();
-
-            boolean hasLayoutFirstVisibleMenu = false;
-            for (int i = 0; i < getChildCount(); i++) {
-                View child = getChildAt(i);
-
-                if (child.getVisibility() == GONE) {
-                    continue;
-                }
-                if (child == mBtnExpand || child == mBtnCollapse) {
-                    int l = centerHorizontalX - child.getMeasuredWidth() / 2;
-                    int t = nextY;
-                    int r = l + child.getMeasuredWidth();
-                    int b = t + child.getMeasuredHeight();
-                    child.layout(l, t, r, b);
-                    nextY += mMaxButtonHeight + mBtnSpacing;
-                } else {
-                    // DisplayMode.LIST 模式时，动画 会把 menuView 进行纵坐标的偏移，透明度设置，这里把坐标，透明度回置
-                    child.setAlpha(1);
-                    child.setTranslationY(0);
-                    // 除去第一个item 设置到可见位置，其余的设置到控件右边不可见位置
-                    if (hasLayoutFirstVisibleMenu) {
-//                        int l = centerHorizontalX + child.getMeasuredWidth() / 2 + mMaxButtonWidth;
-                        int l = centerHorizontalX - child.getMeasuredWidth() / 2;
-                        int t = getPaddingTop();
-                        int r = l + child.getMeasuredWidth();
-                        int b = t + child.getMeasuredHeight();
-                        child.layout(l, t, r, b);
-                        child.setTranslationX(mMaxButtonWidth);
-                    } else {
-                        int l = centerHorizontalX - child.getMeasuredWidth() / 2;
-                        int t = getPaddingTop();
-                        int r = l + child.getMeasuredWidth();
-                        int b = t + child.getMeasuredHeight();
-                        child.layout(l, t, r, b);
-                        hasLayoutFirstVisibleMenu = true;
-
-                    }
-                }
-            }
+            mListStrategy.onLoopLayout(mMaxButtonHeight, mMaxButtonWidth, changed, left, top, right, bottom);
         }
 
     }
@@ -363,44 +338,8 @@ public class EggacheDisplayView extends ViewGroup {
     private void createListModeAnimation() {
         mExpendAnimators = new ArrayList<>();
         mCollapseAnimators = new ArrayList<>();
-        // 第一个item舍弃透明度变化
-        boolean hasDropFirstItemAlpha = false;
-        int beginY = 0;
-        for (int i = 0; i < getChildCount(); i++) {
-            View child = getChildAt(i);
-            if (child == mBtnCollapse && mBtnCollapse.getVisibility() != GONE) {
-                beginY -= mBtnCollapse.getMeasuredHeight();
-                beginY -= mBtnSpacing;
-            } else if (child == mBtnExpand) {
-                ObjectAnimator animator = ObjectAnimator.ofFloat(child, "translationY", -mBtnExpand.getMeasuredHeight(), 0);
-                animator.setStartDelay(400);
-                animator.setDuration(800);
-                ObjectAnimator alphaAnimator = ObjectAnimator.ofFloat(child, "alpha", 0, 1);
-                alphaAnimator.setStartDelay(400);
-                alphaAnimator.setDuration(800);
-                mExpandBtnAnimatorSet.playTogether(animator, alphaAnimator);
+        mListStrategy.createListModeAnimation(mExpendAnimators, mCollapseAnimators, mExpandBtnAnimatorSet);
 
-            } else if (child.getVisibility() == GONE) {
-                // do nothing
-            } else {
-                ObjectAnimator animator = ObjectAnimator.ofFloat(child, "translationY", beginY, 0);
-                mExpendAnimators.add(animator);
-                if (hasDropFirstItemAlpha) {
-                    ObjectAnimator alphaAnimator = ObjectAnimator.ofFloat(child, "alpha", 0, 1);
-                    mExpendAnimators.add(alphaAnimator);
-                }
-
-                ObjectAnimator animator2 = ObjectAnimator.ofFloat(child, "translationY", 0, beginY);
-                mCollapseAnimators.add(animator2);
-                if (hasDropFirstItemAlpha) {
-                    ObjectAnimator alphaAnimator2 = ObjectAnimator.ofFloat(child, "alpha", 1, 0);
-                    mCollapseAnimators.add(alphaAnimator2);
-                }
-                hasDropFirstItemAlpha = true;
-                beginY -= child.getMeasuredHeight();
-                beginY -= mBtnSpacing;
-            }
-        }
         if (mExpandListener == null) {
             mExpandListener = new AnimatorListenerAdapter() {
                 @Override

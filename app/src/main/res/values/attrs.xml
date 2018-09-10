@@ -10,5 +10,10 @@
         <attr name="btn_spacing" format="dimension" />
         <!--在 loop 模式下点击 view 直接展开，List 模式下响应子 view 点击-->
         <attr name="click_loop_to_expand" format="boolean" />
+
+        <attr name="list_direction">
+            <enum name="bottom" value="0" />
+            <enum name="top" value="1" />
+        </attr>
     </declare-styleable>
 </resources>
